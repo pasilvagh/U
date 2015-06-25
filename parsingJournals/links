@@ -1,0 +1,30 @@
+#URL of Journals
+#IEEE
+#IEEE Transaction on Software Engineering
+#https://www.computer.org/csdl/trans/ts/index.html
+#2000 2015
+#IEEE Transaction on Dependable ans Secure Computing
+#https://www.computer.org/csdl/trans/tq/index.html
+#2000 2015
+#SpringerLink
+#Requirement Engineering
+#http://link.springer.com/journal/volumesAndIssues/766
+#5 20
+#Revisión de volumenes: http://link.springer.com/journal/volumesAndIssues/766
+#Volun X Issue Y: http://link.springer.com/journal/766/X/Y/page/1
+#JUCS (partir por el journal 6)
+#http://www.jucs.org/jucs
+#6 21
+#ScienceDirect
+#Computer & Security
+#http://www.sciencedirect.com/science/journal/01674048
+#31 53
+#System Architecture
+#http://www.sciencedirect.com/science/journal/13837621
+#46 61
+#Information and Software Technology
+#http://www.sciencedirect.com/science/journal/09505849
+#42 66
+#System and Software -2 
+http://www.sciencedirect.com/science/journal/01641212
+106 107

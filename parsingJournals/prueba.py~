@@ -1,0 +1,93 @@
+import sys
+import requests
+from bs4 import BeautifulSoup
+import csv, re, os
+
+csv.register_dialect("pipes", delimiter="|")
+
+def fetchPage(url):
+#
+	try:
+		page = requests.get(url)
+	except requests.exceptions.RequestException as e:
+		print ('Error: ', e)
+		return
+	else:
+		print ('everything is fine')
+	return page
+asdf= fetchPage("http://www.sciencedirect.com/science/journal/01674048/53")
+print(asdf.text)
+
+
+"""
+
+def csv_writer(data, path):
+	with open(path, "a") as csvfile:
+		fieldnames = ["volume", "issue", "url", "title"]
+		dialect = csv.get_dialect("pipes")
+		writer = csv.DictWriter(csvfile, fieldnames=fieldnames, dialect=dialect)
+		writer.writeheader()
+		for row in data:
+			writer.writerow({"volume": row[0], "issue": row[1], "url": row[2], "title": row[3] })
+
+url = ""
+resource = ""
+journal = ""
+jour_begin = ""
+jour_end = ""
+
+args = sys.argv
+if len(args) < 5:
+	print ('Cantidad de argumentos erronea')
+else:
+	if (int(args[3]) > 0) and (int(args[4]) > 0) and (int(args[3]) < int(args[4])):
+		if args[1] == 'sciencedirect':
+			url = "www.sciencedirect.com/"
+			resource = "science/journal/"
+		else:
+			print('Hubo error! Bye')
+			sys.exit(1)
+		journal = args[2]
+		jour_begin = args[3]
+		jour_end = args[4]
+		CSV_name = args[1] + "/" + journal + ".csv"
+		for i in range(int(jour_begin), int(jour_end)+1):
+			_URL = url + resource + journal + "/" + str(i)
+			print ('Obteniendo HTML de: ', _URL)
+			#wpage = fetchPage(_URL)
+			print ('Escribiendo títulos para URL: ' + _URL)
+			_file = args[1] + "/" + journal + "/" + str(i)
+			volume = str(i)
+			issue = "1"
+			data = []
+			first = True
+			if os.path.exists(_file) == True:
+				if os.path.isdir(_file) == True:
+					print ('Es directorio')
+					lst = os.listdir(_file)
+					lst.sort()
+					for f in lst: #search *.html files
+						if f.endswith(".html"):
+							issue = (f.split("."))[0]
+							soup = BeautifulSoup(open(_file + "/" + str(f)))
+							for row in soup.find_all("a", attrs={"class": "cLink artTitle S_C_artTitle "}):
+								if(first):
+									data.append([volume, issue, _URL, row.string])
+									first = False
+								else:
+									data.append([volume, issue, "", row.string])
+					csv_writer(data, CSV_name)
+			elif os.path.exists(_file + ".html") == True:
+				soup = BeautifulSoup(open(_file + ".html"))
+				for row in soup.find_all("a", attrs={"class": "cLink artTitle S_C_artTitle "}):
+					if(first):
+						data.append([volume, issue, _URL, row.string])
+						first = False
+					else:
+						data.append([volume, issue, "", row.string])
+				csv_writer(data, CSV_name)
+	else:
+		print ('bye!, hubo error en argumentos')
+"""
+
+

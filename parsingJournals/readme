@@ -1,0 +1,26 @@
+
+
+#URLs de Journal, examles
+
+Springer Link:
+	Requirements Engineering
+		http://link.springer.com/journal/X
+			(X is the code of the journal)
+
+ScienceDirect:
+	http://www.sciencedirect.com/science/journal/X
+		(X is the code of the journal)
+
+IEEE:
+	IEEE Transaction on Software Engineering
+		https://www.computer.org/csdl/trans/ts/index.html
+
+	IEEE Transaction on Dependable and Secure Computing
+		https://www.computer.org/csdl/trans/tq/index.html
+
+	https://www.computer.org/csdl/trans/X/index.html 
+		(X is the code of the journal)
+
+JUCS:
+	X Volume, Y Issue
+		http://www.jucs.org/jucs_X_Y
