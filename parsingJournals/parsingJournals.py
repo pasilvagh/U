@@ -77,6 +77,7 @@ def getListOfIssueLinks(url, origin):
 
 
 def obtainAbstract(url, origin):
+	abstract = ""
 	try:
 		page = fetchWeb(url).text
 	except Exception as inst:
@@ -86,18 +87,17 @@ def obtainAbstract(url, origin):
 	if origin == "sciencedirect":
 		tmp = soup.find_all("div", attrs={"class": "abstract svAbstract "})
 		if len(tmp) > 0:
-			abstract = tmp[0].p.get_text()
+			abstract = tmp[0].p.get_text().rstrip("\n");
 	elif  origin == "jucs":
-		tmp = soup.find_all("strong")
+		tmp = soup.find_all("p")
 		if len(tmp) >0:
-			for strong_tag in tmp:
-				if strong_tag.text == "Abstract:":
-					abstract = strong_tag.next_sibling
+			for p in tmp:
+				abstract = abstract + p.text.replace("\n", "")
 	elif origin == "computer":
-		invalid_tags = ["b", "p"]
-		abstract = soup.find("div", attrs={"class": "abstractText"})
+		tmp = soup.find("div", attrs={"class": "abstractText"})
+		abstract = tmp.get_text()
 	if abstract is not None:
-		return abstract
+		return abstract.rstrip("\n")
 	else:
 		return None
 
@@ -200,10 +200,8 @@ for line in _fileURL:
 					vol = arr[4]
 
 
-					if (int(vol) < int(end) ):
-
+					if (int(vol) <= int(end)):
 						webPage = fetchWeb("http://www.sciencedirect.com" + page).text
-
 						try:
 							soup = BeautifulSoup(webPage) #se cae acá
 						except Exception("algo pasó con BeautifulSoup"):
@@ -229,7 +227,7 @@ for line in _fileURL:
 					arr = page.split("_")
 					issue = arr[len(arr)-1]
 					vol = arr[len(arr)-2]
-					if (vol <= end):
+					if (int(vol) <= int(end)):
 						webPage = fetchWeb("http://www.jucs.org" + page). text
 						soup = BeautifulSoup(webPage)
 						toc = "toc_" + vol + "_" + issue
@@ -254,7 +252,7 @@ for line in _fileURL:
 					arr = page.split("/")
 					issue = arr[len(arr)-2]
 					vol = arr[len(arr)-3]
-					if (vol <= end):
+					if (int(vol) <= int(end)):
 						webPage = fetchWeb("https://www.computer.org" + page). text
 						soup = BeautifulSoup(webPage)
 						for row in soup.find_all("div", attrs={"class": "tableOfContentsLineItemTitle"}):
@@ -274,7 +272,6 @@ for line in _fileURL:
 									data.append([vol, issue, "", row.a.text, ""])
 
 			#Separador de Volumenes
-			data.append(["","","","",""])
 			csv_writer(data, _PATH)
 			print("\nArtículos y Abstracts de " + _URL + " obtenidos\n\n")
 			pageLinks = []
