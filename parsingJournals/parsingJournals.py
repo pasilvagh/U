@@ -87,12 +87,13 @@ def obtainAbstract(url, origin):
 	if origin == "sciencedirect":
 		tmp = soup.find_all("div", attrs={"class": "abstract svAbstract "})
 		if len(tmp) > 0:
-			abstract = tmp[0].p.get_text().rstrip("\n");
+			for p in tmp:
+				abstract = abstract + p.text.replace("\n", "") + " "
 	elif  origin == "jucs":
 		tmp = soup.find_all("p")
 		if len(tmp) >0:
 			for p in tmp:
-				abstract = abstract + p.text.replace("\n", "")
+				abstract = abstract + p.text.replace("\n", "") + " " 
 	elif origin == "computer":
 		tmp = soup.find("div", attrs={"class": "abstractText"})
 		abstract = tmp.get_text()
@@ -119,6 +120,7 @@ for line in _fileURL:
 	line = line.rstrip("\n")
 	tmp = ""
 	url = line.rstrip("\n")
+	data = []
 	if(line[0] != "#"):
 		brokenURL = line.split(".")
 		#----------------------------------------------------
@@ -147,7 +149,6 @@ for line in _fileURL:
 		while (i < (int(end) + 1)):
 			tmpURL = ""
 			_PATH = _FILES + nameSource + ".csv"
-			data = []
 			pageLinks = []
 			vol = ""
 			issue = ""
@@ -199,7 +200,6 @@ for line in _fileURL:
 						issue = "-"
 					vol = arr[4]
 
-
 					if (int(vol) <= int(end)):
 						webPage = fetchWeb("http://www.sciencedirect.com" + page).text
 						try:
@@ -222,7 +222,7 @@ for line in _fileURL:
 									data.append([vol, issue, "" , row.get_text(), abstract ])
 								else:
 									data.append([vol, issue, "" , row.get_text(), ""])
-				#------------------------------------------------------------
+					#------------------------------------------------------------
 				elif (brokenURL[1] == "jucs"):
 					arr = page.split("_")
 					issue = arr[len(arr)-1]
