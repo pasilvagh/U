@@ -1,22 +1,21 @@
-import sys, requests, csv, re, os, io
-from bs4 import BeautifulSoup
-import bs4
+import sys, os, io, time
+import pp
 
-#for csv delimeter definition on Dialect
-csv.register_dialect("pipes", delimiter="|")
 
 def fetchWeb(url):
 	try:
 		page = requests.get(url)
 
 	except requests.exceptions.RequestException as e:
-		print ("Error: ", e)
-		return Exception("Error al cargar página")
+		print "Error en solicitud de pagina"
+		return
 	else:
-		print ("Página " + url + " obtenida")
+		print "Pagina " + url + " obtenida"
 	return page
 
 def csv_writer(data, path):
+	#for csv delimeter definition on Dialect
+	csv.register_dialect("pipes", delimiter="|")
 	try:
 		csvfile = open(path,"a")
 	except IOError:
@@ -30,11 +29,14 @@ def csv_writer(data, path):
 		for row in data:
 			writer.writerow({"volume": row[0], "issue": row[1], "url": row[2], "title": row[3], "abstract": row[4]})
 
-def getListOfIssueLinks(url, origin):
+
+def getListOfIssueLinks(volume, url, origin):
 	data = []
 	lista = []
+	tmp_a = []
+	tmp_b = []
 
-	soup = BeautifulSoup(fetchWeb(url).text)
+	soup = bs4.BeautifulSoup(fetchWeb(url).text)
 	#------------------------------------------------------------
 	#ScienceDirect
 	if(origin == "sciencedirect"):
@@ -46,57 +48,65 @@ def getListOfIssueLinks(url, origin):
 	#JUCS
 	elif(origin == "jucs"):
 		lista = soup.find_all( "div", attrs={"class": "nv nvi"})
-	#Springer
-	"""
-	elif (origin == "springer"):
-		arr = (url.split("/"))
-		vol = arr[len(arr)-1]
-		idV = "volume" + vol
-		dic = {"id" : idV}
-		newUrl = url.replace("volumesAndIssues/", "")
-		getVol = soup.find_all("div", dic)
-		print(getVol)
-		#lista = getVol.find_all("div", attrs={"class": "issue-item"})
-		#print(lista)
-	"""
+
 	if (len(lista) == 0) or (lista is None):
 		return None
+
 	for link in lista:
+		ref = ""
+		#Para JUCS y caso normal de sciencedirect
 		if link.a:
-			data.append(link.find("a")["href"])
-		else:
-			if (origin == "sciencedirect"):
-				extra = (link.find("span").get_text()).split(" ")
-				if (len(extra) > 2):
-					ref = url.replace("http://www.sciencedirect.com", "") + "/" + extra[len(extra)-1]
-				else:
-					ref = url.replace("http://www.sciencedirect.com", "")
-				data.append(ref)
+			tmp_a = (link.a["href"]).split("/")
+			if (origin == "jucs"):
+				vol = tmp_a[1].split("_")
+				if volume <= int(vol[1]):
+					data.append(link.a["href"])
+			elif (origin == "computer"):
+				data.append(link.a["href"])
+			elif (origin == "sciencedirect"):
+				vol = tmp_a[4]
+				if volume <= int(vol):
+					data.append(link.a["href"])
+
+		#Caso especial de sciencedirect
+		elif link.find("span"):
+			space = (link.find("span").get_text()).split(" ")
+			if (len(space) > 2):
+				ref = url.replace("http://www.sciencedirect.com", "") + "/" + space[len(space)-1]
+			else:
+				ref = url.replace("http://www.sciencedirect.com", "")
+			tmp_link = link.find("span").get_text() if ref == "" else ref.encode("utf-8")
+			slash = tmp_link.split("/")
+			if volume <= int(slash[4]):
+				data.append(tmp_link)
+			
 	data.sort()
 	return data
 
 
 def obtainAbstract(url, origin):
-	abstract = ""
-	try:
-		page = fetchWeb(url).text
-	except Exception as inst:
-		return "No se pudo cargar el abstract! BUSCAR MANUALMENTE. Error: " + inst
-	soup = BeautifulSoup(page)
+	page = fetchWeb(url).text
+	
+	soup = bs4.BeautifulSoup(page)
 	abstract = ""
 	if origin == "sciencedirect":
 		tmp = soup.find_all("div", attrs={"class": "abstract svAbstract "})
 		if len(tmp) > 0:
 			for p in tmp:
-				abstract = abstract + p.text.replace("\n", "") + " "
+				abstract = abstract + " " + p.text.replace("\n", "").encode("utf-8")
 	elif  origin == "jucs":
 		tmp = soup.find_all("p")
 		if len(tmp) >0:
 			for p in tmp:
-				abstract = abstract + p.text.replace("\n", "") + " " 
+				abstract = abstract + " " + p.text.replace("\n", "").encode("utf-8")
 	elif origin == "computer":
 		tmp = soup.find("div", attrs={"class": "abstractText"})
-		abstract = tmp.get_text()
+		tmp1 = tmp.get_text().replace("<p>", "")
+		tmp2 = tmp1.replace("</p>", "")
+		tmp3 = tmp2.replace("<it>", "")
+		tmp4 = tmp3.replace("</it>", "")
+		abstract = tmp4.encode("utf-8")
+
 	if abstract is not None:
 		return abstract.rstrip("\n")
 	else:
@@ -104,176 +114,195 @@ def obtainAbstract(url, origin):
 
 
 
-#read list of resources
+def extract(_input):
+	print ("Computing results with PID [%d]" % os.getpid())
+	line1 = _input[0]
+	line2 = _input[1]
+	_FILES = _input[2]
+	nameSource = ""
+	URL = ""
+	url = ""
+	journal = ""
+	jour_begin = ""
+	jour_end = ""
 
-_FILES = "FILES/"
-nameSource = ""
-_URL = ""
-url = ""
-resource = ""
-journal = ""
-jour_begin = ""
-jour_end = ""
-
-_fileURL = open("links", "r")
-for line in _fileURL:
-	line = line.rstrip("\n")
+	line = line1.rstrip("\n")
 	tmp = ""
 	url = line.rstrip("\n")
 	data = []
-	if(line[0] != "#"):
-		brokenURL = line.split(".")
-		#----------------------------------------------------
-		#To obtain journal"s name to give csv files a path
-		if (line[0] == "h"):
-			tmp = brokenURL[2].split("/")
-			#ScienceDirect Journals
-			if brokenURL[1] == "sciencedirect":
-				nameSource = brokenURL[1] + "-" + tmp[len(tmp)-1]
-			#IEEE Transactions
-			elif brokenURL[1] == "computer":
-				nameSource = brokenURL[1] + "-" + tmp[1] + "-" + tmp[2] + "-" + tmp[3]
-			#Springer Link
-			#elif brokenURL[1] == "springer":
-			#	nameSource = brokenURL[1] + "-" + tmp[len(tmp)-1]	
-			#JUCS
-			elif brokenURL[1] == "jucs":
-				nameSource = brokenURL[1]
-		#------------------------------------------------------------
-		#Read next line to obtain the first and last journal to read
-		nextLine = next(_fileURL)
-		begin = nextLine.split(" ")[0]
-		end = nextLine.split(" ")[1]
-		#Volumes
-		i = int(begin)
-		while (i < (int(end) + 1)):
-			tmpURL = ""
-			_PATH = _FILES + nameSource + ".csv"
-			pageLinks = []
-			vol = ""
-			issue = ""
-			maxx = []
-			
-			#JUCS
-			if brokenURL[1] == "jucs":
-				_URL = url + "_" + str(i)						
-			#IEEE
-			elif (brokenURL[1] == "computer"):
-				_URL = url.replace("/index.html","") + "/" + str(i) + "/index.html"
-			#Springer
-			#elif (brokenURL[1] == "springer"):
-			#	_URL = url + "/" + str(i)
-			#ScienceDirect
-			elif (brokenURL[1] == "sciencedirect"):
-				_URL = url + "/" + str(i)
+	brokenURL = line.split(".")
+	#----------------------------------------------------
+	#To obtain journal"s name to give csv files a path
+	tmp = brokenURL[2].split("/")
+	#ScienceDirect Journals
+	if brokenURL[1] == "sciencedirect":
+		nameSource = brokenURL[1] + "-" + tmp[len(tmp)-1]
+	#IEEE Transactions
+	elif brokenURL[1] == "computer":
+		nameSource = brokenURL[1] + "-" + tmp[1] + "-" + tmp[2] + "-" + tmp[3]	
+	#JUCS
+	elif brokenURL[1] == "jucs":
+		nameSource = brokenURL[1]
+	#------------------------------------------------------------
+	nextLine = line2
+	begin = nextLine.split(" ")[0]
+	end = nextLine.split(" ")[1]
+	#Volumes
+	i = int(begin)
+	while (i < (int(end) + 1)):
+		tmpURL = ""
+		_PATH = _FILES + nameSource + ".csv"
+		pageLinks = []
+		vol = ""
+		issue = ""
+		minn = []
+		maxx = []
+		
+		#JUCS
+		if brokenURL[1] == "jucs":
+			_URL = url + "_" + str(i)						
+		#IEEE
+		elif (brokenURL[1] == "computer"):
+			_URL = url.replace("/index.html","") + "/" + str(i) + "/index.html"
+		#ScienceDirect
+		elif (brokenURL[1] == "sciencedirect"):
+			_URL = url + "/" + str(i)
 
-			if len(pageLinks) == 0:
-				pageLinks = getListOfIssueLinks(_URL, brokenURL[1])
-			#Caso especial para sciencedirect
-			if ((pageLinks is not None)) and (brokenURL[1] == "sciencedirect"):
-				if len(pageLinks) > 0:
-					if pageLinks[0] < pageLinks[len(pageLinks)-1]: #Aprovechando que se puede comparar un string así :D
-						maxx = pageLinks[len(pageLinks)-1].split("/")
-					else:
-						maxx = pageLinks[0].split("/")
-					if(len(maxx) == 4):
+		if len(pageLinks) == 0:
+			pageLinks = getListOfIssueLinks(i, _URL, brokenURL[1])
+		if ((pageLinks is not None)) and (brokenURL[1] == "sciencedirect"):
+			if len(pageLinks) > 0:
+				minn = pageLinks[0].split("/")
+				maxx = pageLinks[len(pageLinks)-1].split("/")
+				if(len(minn) == 4):
+					print "min: " + minn[3] + " max: " + maxx[3]
+					if i < maxx[3]:
 						i = int(maxx[3])
-					else:
+				elif(len(minn) > 4):
+					print "min: " + minn[4] + " max: " + maxx[4]
+					if i < maxx[4]:
 						i = int(maxx[4])
-			if pageLinks is None:
-				i = i + 1
-				continue
-			pageLinks.sort()
-			
-			print ("HTML adquirido: ", _URL)
-			print ("Escribiendo títulos para URL: " + _URL)
-			for page in pageLinks:
-				first = True
-				arr = []
-				if (brokenURL[1] == "sciencedirect"):
-					arr = page.split("/")
-				#------------------------------------------------------------
-					#Exclusivo de ScienceDirect
-					if(len(arr) > 5):
-						issue = arr[len(arr)-1]
-					else:
-						issue = "-"
-					vol = arr[4]
-
-					if (int(vol) <= int(end)):
-						webPage = fetchWeb("http://www.sciencedirect.com" + page).text
-						try:
-							soup = BeautifulSoup(webPage) #se cae acá
-						except Exception("algo pasó con BeautifulSoup"):
-							print("paso soup")
-							print(soup.get_text())
-						print ("\n\nArtículos:")
-						for row in soup.find_all("a", attrs={"class": "cLink artTitle S_C_artTitle "}):
-							absRef = row["href"]
-							abstract = obtainAbstract(absRef, brokenURL[1])
-							if(first):
-								if abstract is not None:
-									data.append([vol, issue, "http://www.sciencedirect.com" + page , row.get_text(), abstract ])
-								else:
-									data.append([vol, issue, "http://www.sciencedirect.com" + page , row.get_text(), ""])
-								first = False
-							else:
-								if abstract is not None:
-									data.append([vol, issue, "" , row.get_text(), abstract ])
-								else:
-									data.append([vol, issue, "" , row.get_text(), ""])
-					#------------------------------------------------------------
-				elif (brokenURL[1] == "jucs"):
-					arr = page.split("_")
-					issue = arr[len(arr)-1]
-					vol = arr[len(arr)-2]
-					if (int(vol) <= int(end)):
-						webPage = fetchWeb("http://www.jucs.org" + page). text
-						soup = BeautifulSoup(webPage)
-						toc = "toc_" + vol + "_" + issue
-						for row in soup.find_all("td", attrs={"valign": "top", "width": "335"}):
-							tmpAbsRef = row.a["href"]
-							absRef = "http://www.jucs.org" + tmpAbsRef
-							abstract = obtainAbstract(absRef, brokenURL[1])
-							if (first):
-								if abstract is not None:
-									data.append([vol, issue, "http://www.jucs.org" + page, row.get_text(), abstract ])
-								else:
-									data.append([vol, issue, "http://www.jucs.org" + page, row.get_text(), "" ])
-								first = False
-							else:
-								if abstract is not None:
-									data.append([vol, issue, "", row.get_text(), abstract ])
-								else:
-									data.append([vol, issue, "", row.get_text(), "" ])
-				
-				#------------------------------------------------------------
-				elif (brokenURL[1] == "computer"):
-					arr = page.split("/")
-					issue = arr[len(arr)-2]
-					vol = arr[len(arr)-3]
-					if (int(vol) <= int(end)):
-						webPage = fetchWeb("https://www.computer.org" + page). text
-						soup = BeautifulSoup(webPage)
-						for row in soup.find_all("div", attrs={"class": "tableOfContentsLineItemTitle"}):
-							tmpAbsRef = row.a["href"]
-							absRef = "https://www.computer.org" + tmpAbsRef
-							abstract = obtainAbstract(absRef, brokenURL[1])
-							if (first):
-								if abstract is not None:
-									data.append([vol, issue, "https://www.computer.org" + page, row.a.text, abstract])
-								else:
-									data.append([vol, issue, "https://www.computer.org" + page, row.a.text, ""])
-								first = False
-							else:
-								if abstract is not None:
-									data.append([vol, issue, "", row.a.text, abstract])
-								else:
-									data.append([vol, issue, "", row.a.text, ""])
-
-			#Separador de Volumenes
-			csv_writer(data, _PATH)
-			print("\nArtículos y Abstracts de " + _URL + " obtenidos\n\n")
-			pageLinks = []
+		if pageLinks is None:
 			i = i + 1
+			continue
+		pageLinks.sort()
+		#Hasta aca funciona el paralelismo
+		
+		for page in pageLinks:
+			print "page: " + page + " i: " + str(i)
+			first = True
+			arr = []
+			if (brokenURL[1] == "sciencedirect"):
+				arr = page.split("/")
+			#------------------------------------------------------------
+				#Exclusivo de ScienceDirect
+				if(len(arr) > 5):
+					issue = arr[len(arr)-1]
+				else:
+					issue = "-"
+				vol = arr[4]
+				print vol, issue
+				
+				if (int(vol) <= int(end)):
+					print "vol: " + vol + " end: " + end
+				
+					
+					webPage = fetchWeb("http://www.sciencedirect.com" + page).text
+					
+					soup = bs4.BeautifulSoup(webPage) #se cae aca
+					for row in soup.find_all("a", attrs={"class": "cLink artTitle S_C_artTitle "}):
+						absRef = row["href"]
+						abstract = obtainAbstract(absRef, brokenURL[1])
+						if(first):
+							if abstract is not None:
+								data.append([vol, issue, "http://www.sciencedirect.com" + page , row.get_text().encode("utf-8"), abstract ])
+							else:
+								data.append([vol, issue, "http://www.sciencedirect.com" + page , row.get_text().encode("utf-8"), ""])
+							first = False
+						else:
+							if abstract is not None:
+								data.append([vol, issue, "" , row.get_text().encode("utf-8"), abstract ])
+							else:
+								data.append([vol, issue, "" , row.get_text().encode("utf-8"), ""])
+			#------------------------------------------------------------
+			'''
+			elif (brokenURL[1] == "jucs"):
+				arr = page.split("_")
+				issue = arr[len(arr)-1]
+				vol = arr[len(arr)-2]
+				print(vol, issue)
+				if (int(vol) <= int(end)):
+					webPage = fetchWeb("http://www.jucs.org" + page). text
+					soup = bs4.BeautifulSoup(webPage)
+					toc = "toc_" + vol + "_" + issue
+					for row in soup.find_all("td", attrs={"valign": "top", "width": "335"}):
+						tmpAbsRef = row.a["href"]
+						absRef = "http://www.jucs.org" + tmpAbsRef
+						abstract = obtainAbstract(absRef, brokenURL[1])
+						if (first):
+							if abstract is not None:
+								data.append([vol, issue, "http://www.jucs.org" + page, row.get_text().encode("utf-8"), abstract ])
+							else:
+								data.append([vol, issue, "http://www.jucs.org" + page, row.get_text().encode("utf-8"), "" ])
+							first = False
+						else:
+							if abstract is not None:
+								data.append([vol, issue, "", row.get_text().encode("utf-8"), abstract ])
+							else:
+								data.append([vol, issue, "", row.get_text().encode("utf-8"), "" ])
+			
+			#------------------------------------------------------------
+			elif (brokenURL[1] == "computer"):
+				arr = page.split("/")
+				issue = arr[len(arr)-2]
+				vol = arr[len(arr)-3]
+				if (int(vol) <= int(end)):
+					webPage = fetchWeb("https://www.computer.org" + page). text
+					soup = bs4.BeautifulSoup(webPage)
+					for row in soup.find_all("div", attrs={"class": "tableOfContentsLineItemTitle"}):
+						tmpAbsRef = row.a["href"]
+						absRef = "https://www.computer.org" + tmpAbsRef
+						abstract = obtainAbstract(absRef, brokenURL[1])
+						if (first):
+							if abstract is not None:
+								data.append([vol, issue, "https://www.computer.org" + page, row.a.text.encode("utf-8"), abstract])
+							else:
+								data.append([vol, issue, "https://www.computer.org" + page, row.a.text.encode("utf-8"), ""])
+							first = False
+						else:
+							if abstract is not None:
+								data.append([vol, issue, "", row.a.text.encode("utf-8"), abstract])
+							else:
+								data.append([vol, issue, "", row.a.text.encode("utf-8"), ""])
+		'''
+		#Separador de Volumenes
+		print data
+		#csv_writer(data, _PATH)
+		pageLinks = []
+		i = i + 1
+		print "\n"
+
+
+_FILES = "FILES/"
+#read list of resources
+_fileURL = open("links", "r")
+
+inputs = []
+for line in _fileURL:
+	if(line[0] != "#") and (line[0] == "h"):
+		nextLine = next(_fileURL)
+		inputs.append([line, nextLine,_FILES])
+
 _fileURL.close()
+
+#create job server for parallelism  
+ppservers = ()
+job_server = pp.Server(ppservers=ppservers)
+print "Starting pp with", job_server.get_ncpus(), "workers\n"
+
+jobs_procs = [(_input, job_server.submit(extract,(_input,), (fetchWeb,csv_writer, getListOfIssueLinks, obtainAbstract,), modules=("sys", "requests", "csv", "re", "os", "io", "bs4",))) for _input in inputs]
+
+for _input, job in jobs_procs:
+	job()
+
+job_server.print_stats()

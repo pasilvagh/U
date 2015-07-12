@@ -1,8 +1,7 @@
 #URL of Journals
 #IEEE
 #IEEE Transaction on Software Engineering
-https://www.computer.org/csdl/trans/ts/index.html
-2000 2001
+#https://www.computer.org/csdl/trans/ts/index.html
 #2000 2015
 #IEEE Transaction on Dependable ans Secure Computing
 #https://www.computer.org/csdl/trans/tq/index.html
@@ -10,7 +9,6 @@ https://www.computer.org/csdl/trans/ts/index.html
 #SpringerLink
 #Requirement Engineering
 #http://link.springer.com/journal/volumesAndIssues/766
-#5 7
 #5 20
 #Revisión de volumenes: http://link.springer.com/journal/volumesAndIssues/766
 #Volun X Issue Y: http://link.springer.com/journal/766/X/Y/page/1
@@ -19,17 +17,25 @@ https://www.computer.org/csdl/trans/ts/index.html
 #6 21
 #ScienceDirect
 #Computer & Security
-#http://www.sciencedirect.com/science/journal/01674048
-#31 53
+http://www.sciencedirect.com/science/journal/01674048
+53 53
+#System and Software 
+http://www.sciencedirect.com/science/journal/01641212
+50 50
+#50 107
 #System Architecture
-#http://www.sciencedirect.com/science/journal/13837621
+http://www.sciencedirect.com/science/journal/13837621
+46 46
 #46 61
 #Information and Software Technology
-#http://www.sciencedirect.com/science/journal/09505849
+http://www.sciencedirect.com/science/journal/09505849
+42 42
 #42 66
-#System and Software -1
-#http://www.sciencedirect.com/science/journal/01641212
-#98 100
-#System and Software -2 (SI FUNCIONA)
-#http://www.sciencedirect.com/science/journal/01641212
-#101 107
+#Information Security Technical Report
+http://www.sciencedirect.com/science/journal/13634127
+5 5
+#5 17
+#Journal of Information Security and Applications (Formerly known as Information Security Technical Report)
+http://www.sciencedirect.com/science/journal/22142126
+18 18
+#18 20
