@@ -70,12 +70,8 @@ def getListOfIssueLinks(volume, url, origin):
 
 		#Caso especial de sciencedirect
 		elif link.find("span"):
-			space = (link.find("span").get_text()).split(" ")
-			if (len(space) > 2):
-				ref = url.replace("http://www.sciencedirect.com", "") + "/" + space[len(space)-1]
-			else:
-				ref = url.replace("http://www.sciencedirect.com", "")
-			tmp_link = link.find("span").get_text() if ref == "" else ref.encode("utf-8")
+			ref = url.replace("http://www.sciencedirect.com", "")
+			tmp_link = ref.encode("utf-8")
 			slash = tmp_link.split("/")
 			if volume <= int(slash[4]):
 				data.append(tmp_link)
@@ -175,11 +171,9 @@ def extract(_input):
 				minn = pageLinks[0].split("/")
 				maxx = pageLinks[len(pageLinks)-1].split("/")
 				if(len(minn) == 4):
-					print "min: " + minn[3] + " max: " + maxx[3]
 					if i < maxx[3]:
 						i = int(maxx[3])
 				elif(len(minn) > 4):
-					print "min: " + minn[4] + " max: " + maxx[4]
 					if i < maxx[4]:
 						i = int(maxx[4])
 		if pageLinks is None:
@@ -189,7 +183,6 @@ def extract(_input):
 		#Hasta aca funciona el paralelismo
 		
 		for page in pageLinks:
-			print "page: " + page + " i: " + str(i)
 			first = True
 			arr = []
 			if (brokenURL[1] == "sciencedirect"):
@@ -200,15 +193,9 @@ def extract(_input):
 					issue = arr[len(arr)-1]
 				else:
 					issue = "-"
-				vol = arr[4]
-				print vol, issue
-				
-				if (int(vol) <= int(end)):
-					print "vol: " + vol + " end: " + end
-				
-					
-					webPage = fetchWeb("http://www.sciencedirect.com" + page).text
-					
+				vol = arr[4]				
+				if (int(vol) <= int(end)):			
+					webPage = fetchWeb("http://www.sciencedirect.com" + page).text					
 					soup = bs4.BeautifulSoup(webPage) #se cae aca
 					for row in soup.find_all("a", attrs={"class": "cLink artTitle S_C_artTitle "}):
 						absRef = row["href"]
@@ -225,12 +212,11 @@ def extract(_input):
 							else:
 								data.append([vol, issue, "" , row.get_text().encode("utf-8"), ""])
 			#------------------------------------------------------------
-			'''
+			
 			elif (brokenURL[1] == "jucs"):
 				arr = page.split("_")
 				issue = arr[len(arr)-1]
 				vol = arr[len(arr)-2]
-				print(vol, issue)
 				if (int(vol) <= int(end)):
 					webPage = fetchWeb("http://www.jucs.org" + page). text
 					soup = bs4.BeautifulSoup(webPage)
@@ -274,10 +260,8 @@ def extract(_input):
 								data.append([vol, issue, "", row.a.text.encode("utf-8"), abstract])
 							else:
 								data.append([vol, issue, "", row.a.text.encode("utf-8"), ""])
-		'''
 		#Separador de Volumenes
-		print data
-		#csv_writer(data, _PATH)
+		csv_writer(data, _PATH)
 		pageLinks = []
 		i = i + 1
 		print "\n"
