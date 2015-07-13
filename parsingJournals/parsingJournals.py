@@ -3,11 +3,25 @@ import pp
 
 
 def fetchWeb(url):
-	try:
-		page = requests.get(url)
+	# Use a Session instance to customize how requests handles making HTTP requests.
+	session = requests.Session()
 
-	except requests.exceptions.RequestException as e:
-		print "Error en solicitud de pagina"
+	# mount a custom adapter that retries failed connections for HTTP and HTTPS requests.
+	session.mount("http://", requests.adapters.HTTPAdapter(max_retries=2))
+	session.mount("https://", requests.adapters.HTTPAdapter(max_retries=2))		
+	page = session.get(url)
+	try:
+		page.raise_for_status()
+	except requests.exceptions.HTTPError as e:
+		print "Error > ", e.message
+		try:
+			_failedURL = open("failedURL","a")
+		except IOError:
+			_failedURL = open("failedURL","w+")
+		else:
+			failedPage = "codigo de estado: " + str(page.status_code) + ",  pagina: " + url + "\n"
+			_failedURL.write(failedPage)
+			_failedURL.close()
 		return
 	else:
 		print "Pagina " + url + " obtenida"
@@ -36,7 +50,10 @@ def getListOfIssueLinks(volume, url, origin):
 	tmp_a = []
 	tmp_b = []
 
-	soup = bs4.BeautifulSoup(fetchWeb(url).text)
+	page = fetchWeb(url)
+	if page == None:
+		return None
+	soup = bs4.BeautifulSoup(page.text)
 	#------------------------------------------------------------
 	#ScienceDirect
 	if(origin == "sciencedirect"):
@@ -81,9 +98,11 @@ def getListOfIssueLinks(volume, url, origin):
 
 
 def obtainAbstract(url, origin):
-	page = fetchWeb(url).text
+	page = fetchWeb(url)
+	if page == None:
+		return None
 	
-	soup = bs4.BeautifulSoup(page)
+	soup = bs4.BeautifulSoup(page.text)
 	abstract = ""
 	if origin == "sciencedirect":
 		tmp = soup.find_all("div", attrs={"class": "abstract svAbstract "})
@@ -180,8 +199,9 @@ def extract(_input):
 			i = i + 1
 			continue
 		pageLinks.sort()
+		print pageLinks
 		#Hasta aca funciona el paralelismo
-		
+		'''
 		for page in pageLinks:
 			first = True
 			arr = []
@@ -262,6 +282,7 @@ def extract(_input):
 								data.append([vol, issue, "", row.a.text.encode("utf-8"), ""])
 		#Separador de Volumenes
 		csv_writer(data, _PATH)
+		'''
 		pageLinks = []
 		i = i + 1
 		print "\n"
