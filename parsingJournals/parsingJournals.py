@@ -227,7 +227,7 @@ def extract(_input):
 					if web == None:
 						continue
 					webPage = web.text					
-					soup = bs4.BeautifulSoup(webPage) #se cae aca
+					soup = bs4.BeautifulSoup(webPage) 
 					for row in soup.find_all("a", attrs={"class": "cLink artTitle S_C_artTitle "}):
 						absRef = row["href"]
 						abstract = obtainAbstract(absRef, brokenURL[1])

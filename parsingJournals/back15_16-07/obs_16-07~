@@ -1,0 +1,39 @@
+Idempotentes: Se realizó una doble búsqueda con el web crawler para asegurar que con él fuera idempotente.
+sciencedirect-13634127
+misma cantidad de filas 404
+
+sciencedirect-13837621
+misma cantidad de filas 1073
+
+computer-csdl-trans-tq:
+15-07 y 16-07: 493
+
+computer-csdl-trans-ts:
+15-07 y 16-07: 1179
+
+jucs:
+15-07 y 16-07: 1964
+
+sciencedirect-09505849:
+15-07 y 16-07: 1629, 1 de diferencia! el último registro no más.
+
+sciencedirect-22142126:
+15-07 y 16-07: 77
+
+No Idempotentes: Se hicieron 4 repeticiones de la búsqueda en los siguientes Journals, para ver si el algoritmo puede dar con todas.
+Se realizaron 4 búsquedas, separadas por unas cuantas horas de diferencias, entre el día 15 y 16 de Julio.
+
+sciencedirect-01641212
+1: 2601
+2: 2611
+3: 2611
+4: 2611
+
+sciencedirect-01674048
+1: 1562
+2: 1577
+3: 1577
+4: 1577
+
+
+
