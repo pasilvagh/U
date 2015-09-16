@@ -1,0 +1,37 @@
+Procedimiento de compilación
+
+1. Abrir 3 terminales
+
+2. En una de las terminales: Revisar que no haya una instancia de rmiregistry. Si no hay, ejecutar:
+
+	"make all"
+
+
+	Si hay una instancia, debe hacer "kill -9 numeroproceso_rmiregistry"" y luego hacer
+
+	"make all"
+
+
+3. En la segunda terminal: hacer
+
+	make sem1
+
+
+	Antes de que pasen 6 segundos, ejecutar en la tercera terminal:
+
+	make sem2
+
+
+	Debe esperar hasta que ambos programas muestren el color "Amarillo" en la terminal
+
+
+4. Luego que vea que las terminales se quedan inmóviles, ejecutar en la primera terminal (donde hizo make all)
+
+	make controller
+
+
+5. Y listo! el controlador habrá creado un token que va a pasar a alguno de los dos objetos remotos, de forma pseudo-aleatoria.
+
+
+extra: Si quiere eliminar los archivos *.class o archivos temporales usar
+	make clean
