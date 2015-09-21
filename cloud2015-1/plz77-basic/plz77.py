@@ -65,10 +65,6 @@ class LZ77Compressor:
 			within window
 		1 bit followed by 12 bits pointer (distance to the start of the match from the 
 			current position) and 4 bits (length of the match)
-		
-		If a path to the output file is provided, the compressed data is written into 
-		a binary file. Otherwise, it is returned as a bitarray
-
 		"""
 		output_buffer = bitarray.bitarray(endian='big')
 		i = 0
@@ -77,8 +73,6 @@ class LZ77Compressor:
 			match = self.findLongestMatch(data, i)
 
 			if match: 
-				# Add 1 bit flag, followed by 12 bit for distance, and 4 bit for the length
-				# of the match 
 				(bestMatchDistance, bestMatchLength) = match
 				output_buffer.append(True) # valor 0
 				output_buffer.frombytes(chr(bestMatchDistance >> 4))
@@ -87,7 +81,6 @@ class LZ77Compressor:
 				i += bestMatchLength
 
 			else:
-				# No useful match was found. Add 0 bit flag, followed by 8 bit for the character
 				output_buffer.append(False)
 				output_buffer.frombytes(data[i])
 
@@ -96,7 +89,6 @@ class LZ77Compressor:
 
 		if last:
 			output_buffer.fill()
-		# an output file path was not provided, return the compressed data
 		return (_ind,output_buffer)
 		
 
@@ -111,10 +103,6 @@ class LZ77Compressor:
 		best_match_distance = -1
 		best_match_length = -1
 
-
-		# Optimization: Only consider substrings of length 2 and greater, and just 
-		# output any substring of length 1 (8 bits uncompressed is better than 13 bits
-		# for the flag, distance, and length)
 		for j in range(current_position + 2, end_of_buffer):
 
 			start_index = max(0, current_position - self.window_size)
