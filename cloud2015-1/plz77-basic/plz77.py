@@ -6,6 +6,7 @@ sep = 8
 
 results = {}
 
+#a callback to get results from each job execution
 def aggregate_results(result):
 	results[result[0]] = result[1]
 	print results
@@ -58,7 +59,7 @@ class LZ77Compressor:
 		print ("Computing results with PID [%d]" % os.getpid())
 		"""
 		Given the path of an input file, its content is compressed by applying a simple 
-		LZ77 compression algorithm. 
+		LZ77 compression algorithm (for each piece of the input)
 
 		The compressed format is:
 		0 bit followed by 8 bits (1 byte character) when there are no previous matches

@@ -2,6 +2,9 @@ import math
 from bitarray import bitarray
 
 class LZ77Compressor:
+	"""
+	A simplified implementation of the LZ77 Compression Algorithm
+	"""
 	MAX_WINDOW_SIZE = 400
 	MAX_SEP = 4
 
@@ -21,6 +24,7 @@ class LZ77Compressor:
 		i = 0
 		output_buffer = bitarray(endian='big')
 
+		# read the input file 
 		try:
 			with open(input_file_path, 'rb') as input_file:
 				data = input_file.read()
@@ -35,6 +39,20 @@ class LZ77Compressor:
 		return  separated
 
 	def compress(self, input_file_path, output_file_path=None, sep=2):
+		"""
+		Given the path of an input file, its content is compressed by applying a simple 
+		LZ77 compression algorithm. 
+
+		The compressed format is:
+		0 bit followed by 8 bits (1 byte character) when there are no previous matches
+			within window
+		1 bit followed by 12 bits pointer (distance to the start of the match from the 
+			current position) and 4 bits (length of the match)
+		
+		If a path to the output file is provided, the compressed data is written into 
+		a binary file. Otherwise, it is returned as a bitarray
+
+		"""
 
 		data = separateData()
 '''
@@ -134,11 +152,18 @@ class LZ77Compressor:
 
 
 	def findLongestMatch(self, data, current_position):
+		""" 
+		Finds the longest match to a substring starting at the current_position 
+		in the lookahead buffer from the history window
+		"""
 		end_of_buffer = min(current_position + self.lookahead_buffer_size, len(data) + 1)
 
 		best_match_distance = -1
 		best_match_length = -1
 
+		# Optimization: Only consider substrings of length 2 and greater, and just 
+		# output any substring of length 1 (8 bits uncompressed is better than 13 bits
+		# for the flag, distance, and length)
 		for j in range(current_position + 2, end_of_buffer):
 
 			start_index = max(0, current_position - self.window_size)
