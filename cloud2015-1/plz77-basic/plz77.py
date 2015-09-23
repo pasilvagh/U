@@ -9,7 +9,6 @@ results = {}
 #a callback to get results from each job execution
 def aggregate_results(result):
 	results[result[0]] = result[1]
-	print results
 
 
 class LZ77Compressor:
@@ -70,7 +69,6 @@ class LZ77Compressor:
 		output_buffer = bitarray.bitarray(endian='big')
 		i = 0
 		while i < len(data):
-			#print i
 			match = self.findLongestMatch(data, i)
 
 			if match: 
