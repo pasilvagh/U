@@ -1,4 +1,4 @@
-import pp, sys, os
+import pp, sys, os, time
 
 _input = ""
 _output = ""
@@ -136,6 +136,7 @@ else:
 	_input = str(sys.argv[1])
 	_output = str(sys.argv[2])
 
+	
 	compressor = LZ77Compressor(window_size=400)
 
 	data = compressor.separateData(_input, _output, sep)
@@ -149,7 +150,7 @@ else:
 	ppservers = ()
 	job_server = pp.Server(processors,ppservers=ppservers)
 	print "Starting pp with", job_server.get_ncpus(), "workers\n"
-
+	time1 = time.clock()
 	i = 0
 	for item in data:
 		if i == (len(data)-1):
@@ -159,7 +160,7 @@ else:
 		i = i + 1
 
 	job_server.wait()	
-	job_server.print_stats()
+	print("time: ",time.clock()-time1)
 
 
 	# write the compressed data into a binary file if a path is provided
