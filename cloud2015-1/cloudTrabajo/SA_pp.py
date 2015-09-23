@@ -412,7 +412,6 @@ def suffixArrayRec(s, n, K, js):
 		#iniciar radixSort
 		radixSortPair(C, n12, 1 << 3*bits, js)
 	else:
-		print("con bits mayor a 11")
 		jobs = [(i, js.submit(fillC,(s,1 + (i + i + i)/2))) for i in range(0,n12)]
 		for i, job in jobs:
 			C[i] = job()
@@ -507,7 +506,6 @@ def suffixArrayRec(s, n, K, js):
 	del SA0
 	del SA12
 	del rank
-	print("SA antes de return: ", SA)
 	return SA
 
 	
@@ -523,23 +521,26 @@ def suffixArray(sa_lcp, js):
 	#Reduce para obtener k
 	k = 1 + reduceInit(sa_lcp.SS, sa_lcp.N, max, js)
 	SA_LCP = suffixArrayRec(sa_lcp.SS, sa_lcp.N, k, js)
+	return SA_LCP
 
 fileName = ""
 
-if len(sys.argv) < 2:
-	sys.exit('Usage: %s filename' % sys.argv[0])
-
+if len(sys.argv) < 3:
+	sys.exit('Usage: %s input-file processors' % sys.argv[0])
 if not os.path.exists(sys.argv[1]):
-	sys.exit('ERROR: file %s was not found!' % sys.argv[1])
+	sys.exit('ERROR: input-file %s was not found!' % sys.argv[1])
 else:
+	processors = 1
+	if len(sys.argv) == 3:
+		processors = int(sys.argv[2])
 	fileName = str(sys.argv[1])
-
 	ppservers = ()
-	job_server = pp.Server(1, ppservers=ppservers)
+	job_server = pp.Server(processors, ppservers=ppservers)
 	print (job_server.get_ncpus(), " workers\n")
 
 	(S,n) = readFromFile.read(fileName)
-	sa_lcp = SA_LCP(S,n)
 	time1 = time.clock()
+	sa_lcp = SA_LCP(S,n)
 	SA = suffixArray(sa_lcp, job_server)
 	print("time: ",time.clock()-time1)
+	print("SA: ", SA)

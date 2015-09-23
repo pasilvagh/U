@@ -1,3 +1,5 @@
+import time, sys, os
+import readFromFile
 #URL: http://nbviewer.ipython.org/gist/BenLangmead/6796858
 
 # Suffix tree built with simple O(m^2)-time algorithm.
@@ -67,3 +69,18 @@ class SuffixTree(object):
                 self.minSinceLeaf = min(self.minSinceLeaf, n.depth)
         __visit(self.root)
         return sa, lcp1[1:]
+
+if len(sys.argv) < 2:
+	sys.exit('Usage: %s input-file' % sys.argv[0])
+if not os.path.exists(sys.argv[1]):
+	sys.exit('ERROR: input-file %s was not found!' % sys.argv[1])
+else:
+	_input = str(sys.argv[1])
+	(S,n) = readFromFile.read(_input)
+	time1 = time.clock()
+	st = SuffixTree(S)
+	sa, lcp1 = st.saLcp()	
+	print("time: ",time.clock()-time1)
+	print("SA: ", sa)
+	
+
