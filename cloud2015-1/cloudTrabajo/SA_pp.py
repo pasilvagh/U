@@ -539,8 +539,18 @@ else:
 	print (job_server.get_ncpus(), " workers\n")
 
 	(S,n) = readFromFile.read(fileName)
-	time1 = time.clock()
-	sa_lcp = SA_LCP(S,n)
-	SA = suffixArray(sa_lcp, job_server)
-	print("time: ",time.clock()-time1)
-	print("SA: ", SA)
+
+	# 10 veces
+	times = []
+	N = 10
+	for rep in range(0,N):
+		time1 = time.clock()
+		sa_lcp = SA_LCP(S,n)
+		SA = suffixArray(sa_lcp, job_server)
+		print("repetition # ", rep+1)
+		print("time: ",time.clock()-time1)
+		print("SA: ", SA)
+		times.append(time.clock()-time1)
+	prom = sum(times)/N
+	print("average: ", prom)
+	
