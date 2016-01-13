@@ -151,32 +151,30 @@ else:
 	job_server = pp.Server(processors,ppservers=ppservers)
 	print "Starting pp with", job_server.get_ncpus(), "workers\n"
 	# 10 veces
-	N = 10
-	times = []
-	for rep in range(0,N):
-		time1 = time.clock()
-		i = 0
-		for item in data:
-			if i == (len(data)-1):
-				_out = job_server.submit(compressor.compress,(item,i,True),(compressor.findLongestMatch,), modules=("bitarray", "math", "sys", "os", "io",),callback=aggregate_results)
-			else:
-				_out = job_server.submit(compressor.compress,(item,i,False),(compressor.findLongestMatch,), modules=("bitarray", "math", "sys", "os", "io",),callback=aggregate_results)
-			i = i + 1
-
-		job_server.wait()	
-		print("time: ",time.clock()-time1)
-
-		# write the compressed data into a binary file if a path is provided
-		if _output:
-			try:
-				with open(_output, 'wb') as output_file:
-					for key, value in results.items():
-						output_file.write(value.tobytes())
-					print "File was compressed successfully and saved to output path ..."
-			except IOError:
-				print 'Could not write to output file path. Please check if the path is correct ...'
-				raise
-			output_file.close()
-		times.append(time.clock()-time1)
-	prom = sum(times)/10
-	print("average ", prom)
+#	N = 10
+#	times = []
+#	for rep in range(0,N):
+	time1 = time.clock()
+	i = 0
+	for item in data:
+		if i == (len(data)-1):
+			_out = job_server.submit(compressor.compress,(item,i,True),(compressor.findLongestMatch,), modules=("bitarray", "math", "sys", "os", "io",),callback=aggregate_results)
+		else:
+			_out = job_server.submit(compressor.compress,(item,i,False),(compressor.findLongestMatch,), modules=("bitarray", "math", "sys", "os", "io",),callback=aggregate_results)
+		i = i + 1
+	job_server.wait()	
+	print("time: ",time.clock()-time1)
+	# write the compressed data into a binary file if a path is provided
+	if _output:
+		try:
+			with open(_output, 'wb') as output_file:
+				for key, value in results.items():
+					output_file.write(value.tobytes())
+				print "File was compressed successfully and saved to output path ..."
+		except IOError:
+			print 'Could not write to output file path. Please check if the path is correct ...'
+			raise
+		output_file.close()
+#	times.append(time.clock()-time1)
+#	prom = sum(times)/10
+#	print("average ", prom)
